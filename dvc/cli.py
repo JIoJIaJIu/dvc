@@ -20,6 +20,7 @@ import dvc.command.imp_url as imp_url
 import dvc.command.init as init
 import dvc.command.install as install
 import dvc.command.lock as lock
+import dvc.command.list as list_outs
 import dvc.command.metrics as metrics
 import dvc.command.move as move
 import dvc.command.pipeline as pipeline
@@ -60,6 +61,7 @@ COMMANDS = [
     metrics,
     install,
     root,
+    list_outs,
     lock,
     pipeline,
     daemon,

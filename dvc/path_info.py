@@ -67,14 +67,20 @@ class PathInfo(pathlib.PurePath, _BasePath):
     def relpath(self, other):
         return self.__class__(relpath(self, other))
 
-    def isin(self, other):
+    def isin(self, other, depth=-1):
         if isinstance(other, (str, bytes)):
             other = self.__class__(other)
         elif self.__class__ != other.__class__:
             return False
         # Use cached casefolded parts to compare paths
         n = len(other._cparts)
-        return len(self._cparts) > n and self._cparts[:n] == other._cparts
+        if depth != -1:
+            return (
+                len(self._cparts) - n == depth
+                and self._cparts[:n] == other._cparts
+            )
+        else:
+            return len(self._cparts) > n and self._cparts[:n] == other._cparts
 
 
 class WindowsPathInfo(PathInfo, pathlib.PureWindowsPath):

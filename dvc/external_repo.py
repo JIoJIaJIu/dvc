@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def external_repo(url, rev=None):
-    path = _cached_clone(url, rev)
+def external_repo(url, rev=None, sparse=False):
+    path = _cached_clone(url, rev) if not sparse else _sparse_clone(url, rev)
     try:
         repo = ExternalRepo(path, url)
     except NotDvcRepoError:
@@ -184,6 +184,35 @@ def _cached_clone(url, rev):
     if rev is not None:
         _git_checkout(repo_path, rev)
 
+    return repo_path
+
+
+@wrap_with(threading.Lock())
+def _sparse_clone(url, rev=None):
+    """Sparse clone an external git repo to a temporary directory
+    with *.dvc files only.
+
+    Returns the path to a local temporary directory with the specified
+    revision checked out.
+    """
+    import os
+    import git
+
+    repo_path = tempfile.mkdtemp("dvc-sparse-erepo")
+    git_repo = git.Repo.init(repo_path)
+    with git_repo.config_writer() as cw:
+        cw.set("core", "sparseCheckout", True)
+        sc_path = os.path.join(git_repo.git_dir, "info", "sparse-checkout")
+        with open(sc_path, "w") as sc_file:
+            sc_file.write("**/*.dvc\n")
+    git_repo.create_remote("origin", url)
+    try:
+        ref = rev or "master"  # TODO
+        git_repo.remote().pull(ref, **{"depth": 1})
+    except git.exc.GitCommandError as e:
+        logger.error("Unable to pull repo {} with ref {}", url, ref)
+        raise e
+    git_repo.close()
     return repo_path
 
 
