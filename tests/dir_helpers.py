@@ -66,9 +66,17 @@ __all__ = [
 ]
 
 
-# see https://github.com/iterative/dvc/issues/3167
-git_logger = logging.getLogger("git")
-git_logger.setLevel(logging.CRITICAL)
+disabled_loggers = [
+    # see https://github.com/iterative/dvc/issues/3167
+    "git",
+    # see https://github.com/iterative/dvc/pull/3345/files#r380276443
+    # https://github.com/spulec/moto/issues/2535
+    "moto",
+]
+
+for logger_name in disabled_loggers:
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.CRITICAL)
 
 
 class TmpDir(pathlib.Path):

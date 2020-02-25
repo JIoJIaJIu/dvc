@@ -141,6 +141,26 @@ def _stack_trace(exc_info):
     )
 
 
+def disable_other_loggers():
+    allowed_loggers = [
+        "dvc",
+        "paramiko",
+        "flufl.lock",
+    ]
+    root = logging.root
+    for (logger_name, logger) in root.manager.loggerDict.items():
+        disable_logger = True
+        for allowed_logger in allowed_loggers:
+            if logger_name == allowed_logger:
+                disable_logger = False
+                break
+            if logger_name.startswith("{}.".format(allowed_logger)):
+                disable_logger = False
+                break
+        if disable_logger:
+            logger.disabled = True
+
+
 def setup(level=logging.INFO):
     colorama.init()
 
